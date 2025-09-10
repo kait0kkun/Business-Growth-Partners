@@ -9,7 +9,14 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<script type="module" src="https://static.rocket.new/rocket-web.js?_cfg=https%3A%2F%2Fbusinessg4213back.builtwithrocket.new&_be=https%3A%2F%2Fapplication.rocket.new&_v=0.1.8"></script>
+    <script type="module" src="https://static.rocket.new/rocket-web.js?_cfg=https%3A%2F%2Fbusinessg4213back.builtwithrocket.new&_be=https%3A%2F%2Fapplication.rocket.new&_v=0.1.8"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script>
+        (function() {
+        emailjs.init("-HMp8xdKbe-E_YiM9"); // ✅ Public Key
+        })();
+    </script>
+</script>
 </head>
 <body class="font-inter antialiased">
     <!-- Navigation -->
@@ -1247,6 +1254,7 @@
                             <button type="submit" class="w-full bg-accent hover:bg-accent-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
                                 Get My Free Growth Toolkit
                             </button>
+                            <p id="newsletter-message" class="text-sm mt-2"></p>
                             <p class="text-xs text-primary-200 text-center">
                                 No spam, unsubscribe anytime. We respect your privacy.
                             </p>
@@ -1704,12 +1712,21 @@
         event.preventDefault();
         
         const emailInput = document.getElementById('newsletter-email');
+        const companyInput = document.getElementById('newsletter-company');
+        const sizeInput = document.getElementById('newsletter-size');
+        const industryInput = document.getElementById('newsletter-industry');
+        const challengeInput = document.getElementById('newsletter-challenge');
+
         if (!emailInput || !emailInput.value) {
             alert('Please enter a valid email address.');
             return;
         }
         
         const email = emailInput.value;
+        const company = companyInput ? companyInput.value : "";
+        const size = sizeInput ? sizeInput.value : "";
+        const industry = industryInput ? industryInput.value : "";
+        const challenge = challengeInput ? challengeInput.value : "";
         
         // Simulate form submission with loading state
         const submitButton = event.target.querySelector('button[type="submit"]');
@@ -1719,15 +1736,30 @@
         submitButton.disabled = true;
         
         setTimeout(() => {
-            alert('Thank you for subscribing! Your Business Growth Toolkit will be sent to ' + email);
-            
-            // Reset form
-            document.getElementById('newsletter-form').reset();
-            
-            // Reset button
-            submitButton.textContent = originalText;
-            submitButton.disabled = false;
-        }, 1000);
+            const messageEl = document.getElementById('newsletter-message');
+
+            // --- SEND EMAIL via EmailJS ---
+            emailjs.send("service_ul3jbgj","template_ae6q70g", {
+                email       : email,
+                company     : company,
+                size        : size,
+                industry    : industry,
+                challenge   : challenge
+            }).then(response => {
+                messageEl.textContent = "✅ Thank you for subscribing! Your Growth Toolkit is on its way.";
+                messageEl.style.color = "lightgreen";
+                // Reset form
+                document.getElementById('newsletter-form').reset();
+
+                // Reset button
+                submitButton.textContent = originalText;
+                submitButton.disabled = false;
+            }).catch(error => {
+                messageEl.textContent = "❌ Oops! Something went wrong. Please try again later.";
+                messageEl.style.color = "red";
+            });
+
+        }, 2000);
     }
 
     // Enhanced form validation
@@ -1789,19 +1821,14 @@
     // Enhanced booking form submission with validation and feedback
     function submitBooking(event) {
         event.preventDefault();
-        
-        // Prevent double submission
-        if (bookingFormSubmitted) {
-            return;
-        }
-        
-        // Validate form
+
+        if (bookingFormSubmitted) return;
+
         if (!validateBookingForm()) {
             alert('Please fix the following errors:\n• ' + formValidationErrors.join('\n• '));
             return;
         }
-        
-        // Get form data
+
         const formData = {
             firstName: document.getElementById('booking-firstname').value,
             lastName: document.getElementById('booking-lastname').value,
@@ -1814,45 +1841,49 @@
             date: document.getElementById('consultation-date').value,
             time: document.getElementById('consultation-time').value
         };
-        
-        // Show loading state
+
         const submitButton = event.target.querySelector('button[type="submit"]');
         const originalText = submitButton.textContent;
         submitButton.textContent = 'Booking Your Session...';
         submitButton.disabled = true;
         bookingFormSubmitted = true;
-        
-        // Simulate booking process
+
         setTimeout(() => {
-            const name = formData.firstName + ' ' + formData.lastName;
-            
-            // Show success message
-            alert(`🎉 Booking Confirmed!\n\nHello ${name}, your ${formData.consultationType.replace('-', ' ')} is scheduled for ${formData.date} at ${formData.time}.\n\nWhat happens next:\n• You'll receive a calendar invitation within 5 minutes\n• A preparation checklist will be sent to ${formData.email}\n• Our team will call you 15 minutes before the session\n\nThank you for choosing Business Growth Partners!`);
-            
-            // Reset form
-            document.getElementById('booking-form').reset();
-            
-            // Reset button and form state
-            submitButton.textContent = originalText;
-            submitButton.disabled = false;
-            bookingFormSubmitted = false;
-            
-            // Track the booking (for analytics)
-            if (typeof gtag !== 'undefined') {
-                gtag('event', 'booking_completed', {
-                    'event_category': 'engagement',
-                    'event_label': formData.consultationType,
-                    'value': 1
-                });
-            }
-            
-            // Show success section
-            showBookingSuccess();
-            
+            // --- SEND EMAIL via EmailJS ---
+            emailjs.send("service_ul3jbgj","template_oiq67zb", {
+                phone               : formData.phone,
+                name                : formData.firstName + " " + formData.lastName,
+                consultation_type   : formData.consultationType,
+                date                : formData.date,
+                time                : formData.time,
+                email               : formData.email,
+                company             : formData.company
+            }).then(response => {
+                document.getElementById('booking-form').reset();
+                submitButton.textContent = originalText;
+                submitButton.disabled = false;
+                bookingFormSubmitted = false;
+
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'booking_completed', {
+                        'event_category': 'engagement',
+                        'event_label': formData.consultationType,
+                        'value': 1
+                    });
+                }
+
+                showBookingSuccess();
+
+            }).catch(error => {
+                submitButton.textContent = originalText;
+                submitButton.disabled = false;
+                bookingFormSubmitted = false;
+            });
+
         }, 2000);
     }
 
-    // Show booking success message
+    // ✅ Keep this only for visuals
     function showBookingSuccess() {
         const bookingSection = document.getElementById('booking');
         if (bookingSection) {
@@ -1869,11 +1900,8 @@
             `;
             
             bookingSection.appendChild(successMessage);
-            
-            // Remove success message after 10 seconds
-            setTimeout(() => {
-                successMessage.remove();
-            }, 10000);
+
+            setTimeout(() => successMessage.remove(), 10000);
         }
     }
 
